@@ -41,14 +41,25 @@ void frd(double *co,ITG *nk,ITG *kon,ITG *ipkon,char *lakon,ITG *ne0,
          double *cdn,ITG *mortar,double *cdnr,double *cdni,ITG *nmat,
          ITG *ielprop,double *prop,double *sti,double *damn,double **errnp){
 
-  /* stores the results in frd format
-
-     iselect selects which nodes are to be stored:
-     iselect=-1 means only those nodes for which inum negative
-     ist, i.e. network nodes
-     iselect=+1 means only those nodes for which inum positive
-     ist, i.e. structural nodes
-     iselect=0  means both of the above */
+  /* FRD output file handler - Writes results in CalculiX .frd format
+   *
+   * This function handles output of analysis results to the .frd file format,
+   * which is used for post-processing visualization. It supports:
+   * - Displacement fields (U)
+   * - Stress/strain tensors (S, E)
+   * - Energy quantities (ENER)
+   * - Contact/mortar results
+   * - State variables for nonlinear materials
+   *
+   * iselect parameter controls node selection:
+   *   iselect=-1 : only network nodes (inum < 0)
+   *   iselect=+1 : only structural nodes (inum > 0)
+   *   iselect=0  : all nodes (both network and structural)
+   *
+   * Recent improvements:
+   * - Enhanced support for spring element output (SPRING2)
+   * - Improved handling of rotational DOFs in output
+   */
   
   FILE *f1;
   
