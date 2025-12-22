@@ -1,0 +1,15 @@
+CalculiX Benchmark Test Results
+================================
+Date: Mon Dec 22 10:45:33 UTC 2025
+Binary: /home/user/CalculiX/bin/ccx_2.21
+
+Results:
+  Total:  4
+  Passed: 4
+  Failed: 0
+
+Test Details:
+  1. test1_cantilever - Cantilever beam deflection
+  2. test2_deepbeam - Deep beam shear validation
+  3. portal_A0.1g - Portal frame A=0.1g earthquake
+  4. portal_A0.2g - Portal frame A=0.2g earthquake

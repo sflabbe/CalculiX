@@ -302,6 +302,13 @@ void CalculiXstep(int argc,char argv[][133],ITG **nelemloadp,double **xloadp,
     printf("software, and you are welcome to redistribute it under\n");
     printf("certain conditions, see gpl.htm\n\n");
     printf("************************************************************\n\n");
+
+    /* Build timestamp - Updated during compilation to track binary version.
+     * This helps identify which improvements are included:
+     * - SPRING2 rotational DOF support (DOF 4-6 for M-theta hinges)
+     * - Improved nonlinear spring force/stiffness calculations
+     * - System library linking (ARPACK/OpenBLAS autodetection)
+     */
     printf("You are using an executable made on Mon Dec 22 09:45:52 AM UTC 2025\n");
     fflush(stdout);
 
