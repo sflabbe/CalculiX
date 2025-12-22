@@ -213,6 +213,11 @@
                index=nodempc(3,nodempc(3,nodempc(3,index)))
             enddo
             stdev=dsqrt(stdev/nkn)
+
+            if(labmpc(nmpc)(8:9).eq.'BS') then
+               write(27,*) 'MEANROTBS MPC created: id ',nmpc,
+     &              ' ipompc ',ipompc(nmpc),' terms ',nnodes
+            endif
 !
 !           calculating the derivatives
 !
@@ -300,6 +305,19 @@ c               if(c1.lt.1.d-20) then
                index=nodempc(3,index)
                if(nodempc(3,index).eq.0) exit
             enddo
+
+            if(labmpc(nmpc)(8:9).eq.'BS') then
+               write(27,*) 'MEANROTBS MPC list (node,dir,next):'
+               index=ipompc(nmpc)
+               j=0
+               do
+                  if(index.eq.0) exit
+                  j=j+1
+                  write(27,*) '  ',j, nodempc(1,index),
+     &                 nodempc(2,index), nodempc(3,index)
+                  index=nodempc(3,index)
+               enddo
+            endif
 !
 !           look for biggest coefficient of all but the last
 !           regular node. The general form of the MPC is:
@@ -542,5 +560,3 @@ c            endif
 !
       return
       end
-
-

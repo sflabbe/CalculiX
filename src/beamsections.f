@@ -20,7 +20,7 @@
      &  ialset,nset,ielmat,matname,nmat,ielorien,orname,norien,
      &  thicke,ipkon,iponor,xnor,ixfree,
      &  offset,lakon,irstrt,istep,istat,n,iline,ipol,inl,ipoinp,inp,
-     &  ipoinpc,mi,nelcon,ier)
+     &  ipoinpc,mi,ielprop,nprop,nprop_,prop,nelcon,ier)
 !
 !     reading the input deck: *BEAM SECTION
 !
@@ -36,14 +36,17 @@
       character*132 textpart(16)
 !
       integer istartset(*),iendset(*),ialset(*),mi(*),ielmat(mi(3),*),
-     &  ipoinpc(0:*),numnod,id,
+     &  ipoinpc(0:*),numnod,id,ielprop(*),nprop,nprop_,npropstart,
      &  ielorien(mi(3),*),ipkon(*),iline,ipol,inl,ipoinp(2,*),
      &  inp(3,*),nset,nmat,norien,istep,istat,n,key,i,j,k,l,imaterial,
      &  iorientation,ipos,m,iponor(2,*),ixfree,
      &  indexx,indexe,irstrt(*),nelcon(2,*),ier
 !
       real*8 thicke(mi(3),*),thickness1,thickness2,p(3),xnor(*),
-     &  offset(2,*),offset1,offset2,dd
+     &  offset(2,*),offset1,offset2,dd,prop(*),a,xi11,xi22,xk,radius,
+     &  pi
+!
+      logical hasu1
 !
       if((istep.gt.0).and.(irstrt(1).ge.0)) then
          write(*,*) 
@@ -54,6 +57,7 @@
       endif
 !
       nodalthickness=.false.
+      hasu1=.false.
       offset1=0.d0
       offset2=0.d0
       orientation='                    
@@ -170,8 +174,9 @@
 !
       do j=istartset(i),iendset(i)
          if(ialset(j).gt.0) then
-            if(lakon(ialset(j))(1:1).ne.'B') then
-               write(*,*) 
+            if((lakon(ialset(j))(1:1).ne.'B').and.
+     &           (lakon(ialset(j))(1:2).ne.'U1')) then
+               write(*,*)
      &           '*ERROR reading *BEAM SECTION: *BEAM SECTION can'
                write(*,*) '       only be used for beam elements.'
                write(*,*) '       Element ',ialset(j),' is not a beam el
@@ -183,18 +188,23 @@
             ielorien(1,ialset(j))=iorientation
             offset(1,ialset(j))=offset1
             offset(2,ialset(j))=offset2
-            if(section.eq.'RECT') then
-               lakon(ialset(j))(8:8)='R'
+            if(lakon(ialset(j))(1:2).eq.'U1') then
+               hasu1=.true.
             else
-               lakon(ialset(j))(8:8)='C'
+               if(section.eq.'RECT') then
+                  lakon(ialset(j))(8:8)='R'
+               else
+                  lakon(ialset(j))(8:8)='C'
+               endif
             endif
          else
             k=ialset(j-2)
             do
                k=k-ialset(j)
                if(k.ge.ialset(j-1)) exit
-               if(lakon(k)(1:1).ne.'B') then
-                  write(*,*) 
+               if((lakon(k)(1:1).ne.'B').and.
+     &              (lakon(k)(1:2).ne.'U1')) then
+                  write(*,*)
      &              '*ERROR reading *BEAM SECTION: *BEAM SECTION can'
                   write(*,*) '       only be used for beam elements.'
                   write(*,*) '       Element ',k,' is not a beam element
@@ -206,10 +216,14 @@
                ielorien(1,k)=iorientation
                offset(1,k)=offset1
                offset(2,k)=offset2
-               if(section.eq.'RECT') then
-                  lakon(k)(8:8)='R'
+               if(lakon(k)(1:2).eq.'U1') then
+                  hasu1=.true.
                else
-                  lakon(k)(8:8)='C'
+                  if(section.eq.'RECT') then
+                     lakon(k)(8:8)='R'
+                  else
+                     lakon(k)(8:8)='C'
+                  endif
                endif
             enddo
          endif
@@ -254,8 +268,12 @@
       do j=istartset(i),iendset(i)
          if(ialset(j).gt.0) then
             indexe=ipkon(ialset(j))
-            read(lakon(ialset(j))(3:3),'(i1)') numnod
-            numnod=numnod+1
+            if(lakon(ialset(j))(1:2).eq.'U1') then
+               numnod=2
+            else
+               read(lakon(ialset(j))(3:3),'(i1)') numnod
+               numnod=numnod+1
+            endif
             do l=1,numnod
                thicke(1,indexe+l)=thickness1
                thicke(2,indexe+l)=thickness2
@@ -266,8 +284,12 @@
                k=k-ialset(j)
                if(k.ge.ialset(j-1)) exit
                indexe=ipkon(k)
-               read(lakon(k)(3:3),'(i1)') numnod
-               numnod=numnod+1
+               if(lakon(k)(1:2).eq.'U1') then
+                  numnod=2
+               else
+                  read(lakon(k)(3:3),'(i1)') numnod
+                  numnod=numnod+1
+               endif
                do l=1,numnod
                   thicke(1,indexe+l)=thickness1
                   thicke(2,indexe+l)=thickness2
@@ -315,8 +337,12 @@
       do j=istartset(i),iendset(i)
          if(ialset(j).gt.0) then
             indexe=ipkon(ialset(j))
-            read(lakon(ialset(j))(3:3),'(i1)') numnod
-            numnod=numnod+1
+            if(lakon(ialset(j))(1:2).eq.'U1') then
+               numnod=2
+            else
+               read(lakon(ialset(j))(3:3),'(i1)') numnod
+               numnod=numnod+1
+            endif
             do l=1,numnod
                if(indexx.eq.-1) then
                   indexx=ixfree
@@ -333,8 +359,12 @@
                k=k-ialset(j)
                if(k.ge.ialset(j-1)) exit
                indexe=ipkon(k)
-               read(lakon(k)(3:3),'(i1)') numnod
-               numnod=numnod+1
+               if(lakon(k)(1:2).eq.'U1') then
+                  numnod=2
+               else
+                  read(lakon(k)(3:3),'(i1)') numnod
+                  numnod=numnod+1
+               endif
                do l=1,numnod
                if(indexx.eq.-1) then
                   indexx=ixfree
@@ -349,9 +379,73 @@
          endif
       enddo
 !
+      if(hasu1) then
+         if((thickness1.lt.0.d0).or.(thickness2.lt.0.d0)) then
+            write(*,*) '*ERROR reading *BEAM SECTION:'
+            write(*,*) '       nodal thickness is not supported'
+            write(*,*) '       for U1 beam elements.'
+            ier=1
+            return
+         endif
+         if(section.eq.'RECT') then
+            a=thickness1*thickness2
+            xi11=thickness1*thickness2**3/12.d0
+            xi22=thickness2*thickness1**3/12.d0
+            xk=5.d0/6.d0
+         elseif(section.eq.'CIRC') then
+            pi=4.d0*datan(1.d0)
+            radius=0.5d0*thickness1
+            a=pi*radius*radius
+            xi11=pi*radius**4/4.d0
+            xi22=xi11
+            xk=6.d0/7.d0
+         else
+            write(*,*) '*ERROR reading *BEAM SECTION:'
+            write(*,*) '       unsupported section type for U1.'
+            ier=1
+            return
+         endif
+         npropstart=nprop
+         if(nprop+10.gt.nprop_) then
+            write(*,*) '*ERROR reading *BEAM SECTION:'
+            write(*,*) '       increase nprop_ to store U1 data.'
+            ier=1
+            return
+         endif
+         prop(npropstart+1)=a
+         prop(npropstart+2)=xi11
+         prop(npropstart+3)=0.d0
+         prop(npropstart+4)=xi22
+         prop(npropstart+5)=xk
+         prop(npropstart+6)=p(1)
+         prop(npropstart+7)=p(2)
+         prop(npropstart+8)=p(3)
+         prop(npropstart+9)=offset1
+         prop(npropstart+10)=offset2
+         nprop=nprop+10
+!
+!        assign U1 properties to the elements in the set
+!
+         do j=istartset(i),iendset(i)
+            if(ialset(j).gt.0) then
+               if(lakon(ialset(j))(1:2).eq.'U1') then
+                  ielprop(ialset(j))=npropstart
+               endif
+            else
+               k=ialset(j-2)
+               do
+                  k=k-ialset(j)
+                  if(k.ge.ialset(j-1)) exit
+                  if(lakon(k)(1:2).eq.'U1') then
+                     ielprop(k)=npropstart
+                  endif
+               enddo
+            endif
+         enddo
+      endif
+!
       call getnewline(inpc,textpart,istat,n,key,iline,ipol,inl,
      &     ipoinp,inp,ipoinpc)
 !
       return
       end
-

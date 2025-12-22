@@ -129,7 +129,7 @@ void cascade(ITG *ipompc, double **coefmpcp, ITG **nodempcp, ITG *nmpc,
   do{
     ichange=0;
     for(i=0;i<*nmpc;i++){
-      
+
       /* label nl for nonlinear mpc */
 
       if(jmpc[i]==1){
@@ -137,6 +137,7 @@ void cascade(ITG *ipompc, double **coefmpcp, ITG **nodempcp, ITG *nmpc,
       }else{
 	nl=0;
       }
+
       
       /* initialization of iexpand */
       
@@ -162,6 +163,15 @@ void cascade(ITG *ipompc, double **coefmpcp, ITG **nodempcp, ITG *nmpc,
 	  /* no expansion if there is a dependence of a
 	     nonlinear MPC on another linear or nonlinear MPC
 	     and the call is from main */ 
+
+	  if((strncmp(&labmpc[20*i],"MEANROT",7)==0) ||
+	     (strncmp(&labmpc[20*(mpc-1)],"MEANROT",7)==0)){
+
+	    /* do not alter MEANROT MPCs */
+	    index=nodempc[3*index-1];
+	    if(index!=0) continue;
+	    else break;
+	  }
 
 	  if((jmpc[mpc-1]==1)||(nl==1)){
 	    *icascade=2;

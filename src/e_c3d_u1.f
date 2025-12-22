@@ -241,7 +241,12 @@
      &  plicon(0:2*npmat_,ntmat_,*),plkcon(0:2*npmat_,ntmat_,*),
      &  xstiff(27,mi(1),*),plconloc(802),dtime,ttime,time,tmg(12,12),
      &  a,xi11,xi12,xi22,xk,e1(3),offset1,offset2,y1,y2,y3,z1,z2,z3,
-     &  sg(12,12),elcon(0:ncmat_,ntmat_,*),smg(12,12),dxl(3),detj
+     &  sg(12,12),elcon(0:ncmat_,ntmat_,*),smg(12,12),dxl(3),detj,
+     &  kg(12,12),kgp(4,4),pcomp,kgfac
+!
+      integer idy(4),idz(4)
+      data idy /2,6,8,12/
+      data idz /3,5,9,11/
 !
       indexe=ipkon(nelem)
 !
@@ -344,15 +349,6 @@ c      write(*,*) 'u1 trans3 ',e3(1),e3(2),e3(3)
             ff(i)=0.d0
           enddo
         endif
-      endif
-!
-!     displacements for 2nd order static and modal theory
-!
-      if(((iperturb(1).eq.1).or.(iperturb(2).eq.1)).and.
-     &          (stiffness.eq.1).and.(buckling.eq.0)) then
-         write(*,*) '*ERROR in e_c3d_u1: no second order'
-         write(*,*) '       calculation for this type of element'
-         call exit(201)
       endif
 !
 !     check for Coriolis
@@ -459,23 +455,14 @@ c      write(*,*) 'u1 trans3 ',e3(1),e3(2),e3(3)
          endif
       endif
 !     
-      if(buckling.eq.1) then
-         write(*,*) '*ERROR in e_c3d_u1: no buckling '
-         write(*,*) '       calculation for this type of element'
-         call exit(201)
-      endif
-!     
 !     determination of the stiffness, and/or mass and/or
 !     buckling matrix
 !     
       if((stiffness.eq.1).or.(mass.eq.1).or.(buckling.eq.1).or.
      &     (coriolis.eq.1)) then
 !     
-         if(((iperturb(1).ne.1).and.(iperturb(2).ne.1)).or.
-     &        (buckling.eq.1)) then
-!     
 !     stiffness matrix
-!   
+!
             y1=xk*um*a*e*xi11*(12.d0*e*xi11+xk*um*a*dl*dl)
             y2=(12.d0*e*xi11-xk*um*a*dl*dl)**2
             y3=4.d0*e*xi11*((xk*um*a)**2*dl**4+
@@ -527,6 +514,53 @@ c      write(*,*) 'u1 trans3 ',e3(1),e3(2),e3(3)
             s(10,10)=s(4,4)
             s(11,11)=z3/(dl*z2)
             s(12,12)=y3/(dl*y2)
+!
+!           geometric stiffness (P-Delta) for NLGEOM
+!           sign convention: N>0 in tension; compression<0 softens
+!
+            if((stiffness.eq.1).and.
+     &           ((iperturb(1).eq.1).or.(iperturb(2).eq.1))) then
+               do i=1,12
+                  do j=1,12
+                     kg(i,j)=0.d0
+                  enddo
+               enddo
+!
+               pcomp=sti(1,1,nelem)
+!
+               if(dabs(pcomp).gt.0.d0) then
+                  kgfac=pcomp/(30.d0*dl)
+                  kgp(1,1)=36.d0*kgfac
+                  kgp(1,2)=3.d0*dl*kgfac
+                  kgp(1,3)=-36.d0*kgfac
+                  kgp(1,4)=3.d0*dl*kgfac
+                  kgp(2,1)=kgp(1,2)
+                  kgp(2,2)=4.d0*dl*dl*kgfac
+                  kgp(2,3)=-3.d0*dl*kgfac
+                  kgp(2,4)=-dl*dl*kgfac
+                  kgp(3,1)=kgp(1,3)
+                  kgp(3,2)=kgp(2,3)
+                  kgp(3,3)=36.d0*kgfac
+                  kgp(3,4)=-3.d0*dl*kgfac
+                  kgp(4,1)=kgp(1,4)
+                  kgp(4,2)=kgp(2,4)
+                  kgp(4,3)=kgp(3,4)
+                  kgp(4,4)=4.d0*dl*dl*kgfac
+!
+                  do i=1,4
+                     do j=1,4
+                        kg(idy(i),idy(j))=kg(idy(i),idy(j))+kgp(i,j)
+                        kg(idz(i),idz(j))=kg(idz(i),idz(j))+kgp(i,j)
+                     enddo
+                  enddo
+!
+                  do i=1,12
+                     do j=1,12
+                        s(i,j)=s(i,j)+kg(i,j)
+                     enddo
+                  enddo
+               endif
+            endif
 !
 !           setting up the mass matrix
 ! 
@@ -642,10 +676,7 @@ c      write(*,*) 'u1 trans3 ',e3(1),e3(2),e3(3)
                enddo
             enddo
 !
-         endif
-!     
       endif
 !     
       return
       end
-

@@ -108,6 +108,13 @@
      &                             inotr(2,j)).and.
      &                             (nodempc(2,index1).eq.k))
      &                             then
+                                if(labmpc(ilmpc(id))(1:9).eq.
+     &                             'MEANROTBS') then
+                                  write(*,*) '*DEBUG boundarys:'
+                                  write(*,*) '       cutting MEANROTBS'
+                                  write(*,*) '       mpc id',ilmpc(id),
+     &                               ' index',index1,' ->',mpcfree
+                                endif
                                 nodempc(3,index1)=mpcfree
                                 mpcfree=ipompc(ilmpc(id))
                                 ipompc(ilmpc(id))=0

@@ -27,6 +27,9 @@ _set_output_format(_TWO_DIGIT_EXPONENT);
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <unistd.h>
 #include "CalculiX.h"
 
 #ifdef CALCULIX_MPI
@@ -34,6 +37,16 @@ ITG myid = 0,nproc = 0;
 #endif
 
 struct timespec totalCalculixTimeStart,totalCalculixTimeEnd; 
+
+static void ccx_backtrace_handler(int sig){
+  void *stack[64];
+  int n=backtrace(stack,64);
+  const char msg[]="ccx: caught SIGFPE\n";
+  (void)sig;
+  write(2,msg,sizeof(msg)-1);
+  backtrace_symbols_fd(stack,n,2);
+  _exit(128+SIGFPE);
+}
 
 int main(int argc,char *argv[])
 {
@@ -115,6 +128,10 @@ int main(int argc,char *argv[])
 
   clock_gettime(CLOCK_MONOTONIC, &totalCalculixTimeStart);
 
+  if(getenv("CCX_BACKTRACE")!=NULL){
+    signal(SIGFPE,ccx_backtrace_handler);
+  }
+
   if(argc==1){printf("Usage: CalculiX.exe -i jobname\n");FORTRAN(stop,());}
   else{
     for(i=1;i<argc;i++){
@@ -166,7 +183,7 @@ int main(int argc,char *argv[])
    * - Improved nonlinear spring force/stiffness calculations
    * - System library linking (ARPACK/OpenBLAS autodetection)
    */
-  printf("You are using an executable made on Mon Dec 22 09:45:52 AM UTC 2025\n");
+  printf("You are using an executable made on Mon Dec 22 06:21:11 PM UTC 2025\n");
   fflush(stdout);
 
   NNEW(ipoinp,ITG,2*nentries);

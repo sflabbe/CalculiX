@@ -131,11 +131,7 @@
              inum(node)=inum(node)+1
          enddo
       else
-         write(*,*) '*ERROR in extrapolate_u1'
-         write(*,*) '       extropolation for element of type u1'
-         write(*,*) '       is only coded for fields with 6'
-         write(*,*) '       entries'
-         call exit(201)
+         return
       endif
 !
 !     END OF THIS SUBROUTINE

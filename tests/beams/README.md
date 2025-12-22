@@ -185,6 +185,64 @@ Beam element    1  section forces (local coords):
 
 ---
 
+## P-Delta Tests (NLGEOM)
+
+### Test 3: P-Delta Pinned-Pinned Column (`test3_pdelta_pinned.inp`)
+
+**Description**: Column with axial compression and small lateral load. Two
+steps compare linear vs NLGEOM.
+
+**Geometry**:
+- Length: L = 1.0 m
+- Section: Rectangular 0.01 m × 0.1 m (b × h)
+- Elements: 10 × B31
+
+**Material**:
+- Steel: E = 210 GPa, ν = 0.3
+
+**Loading**:
+- Axial compression: P = 8.6e5 N (≈ 0.5 Pcr)
+- Lateral load: H = 1000 N at midspan
+
+**How to Run**:
+```bash
+../../src/CalculiX -i test3_pdelta_pinned
+```
+
+**Pass Criteria**:
+- Midspan displacement in Step 2 (NLGEOM) > Step 1 (linear)
+- Amplification should be noticeable (target ~2x for P ≈ 0.5 Pcr)
+
+---
+
+### Test 4: P-Delta Cantilever (`test4_pdelta_cantilever.inp`)
+
+**Description**: Cantilever with axial compression and tip lateral load. Two
+steps compare linear vs NLGEOM.
+
+**Geometry**:
+- Length: L = 1.0 m
+- Section: Rectangular 0.01 m × 0.1 m (b × h)
+- Elements: 10 × B31
+
+**Material**:
+- Steel: E = 210 GPa, ν = 0.3
+
+**Loading**:
+- Axial compression: P = 2.0e5 N (≈ 0.46 Pcr for cantilever)
+- Lateral load: H = 1000 N at tip
+
+**How to Run**:
+```bash
+../../src/CalculiX -i test4_pdelta_cantilever
+```
+
+**Pass Criteria**:
+- Tip displacement in Step 2 (NLGEOM) > Step 1 (linear)
+- Amplification should be clear
+
+---
+
 ## Known Issues / Limitations
 
 1. **No Compiler Available**:

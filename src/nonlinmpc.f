@@ -844,6 +844,28 @@ c     endif
          n=i-1
          if((labmpc(ii)(1:7).eq.'MEANROT').or.
      &        (labmpc(ii)(1:1).eq.'1')) then
+            if((labmpc(ii)(8:9).eq.'BS').and.(mod(n-1,3).ne.0)) then
+               write(*,*) '*WARNING in nonlinmpc: skipping'
+               write(*,*) '         MEANROTBS update;'
+               write(*,*) '         mpc id:',ii,' ipompc:',ipompc(ii)
+               write(*,*) '         unexpected term count:',n
+               do j=1,n
+                  write(*,*) '         term',j,'node',
+     &                 iaux(maxlenmpc+j),'dir',iaux(j)
+               enddo
+               index=ipompc(ii)
+               j=0
+               write(*,*) '         raw chain (index,node,dir,next):'
+               do
+                  if(index.eq.0) exit
+                  j=j+1
+                  write(*,*) '         ',index,nodempc(1,index),
+     &                 nodempc(2,index),nodempc(3,index)
+                  if(j.ge.20) exit
+                  index=nodempc(3,index)
+               enddo
+               cycle
+            endif
             call umpc_mean_rot(aux,aux(3*maxlenmpc+1),const,
      &           aux(6*maxlenmpc+1),iaux,n,fmpc(ii),iit,idiscon,
      &           iaux(maxlenmpc+1),ikmpc,nmpc,ikboun,nboun,

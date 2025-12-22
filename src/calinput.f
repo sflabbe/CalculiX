@@ -316,7 +316,8 @@
      &         ialset,nset,ielmat,matname,nmat,ielorien,orname,norien,
      &         thicke,ipkon,iponor,xnor,ixfree,
      &         offset,lakon,irstrt,istep,istat,n,iline,ipol,inl,
-     &         ipoinp,inp,ipoinpc,mi,nelcon,ier)
+     &         ipoinp,inp,ipoinpc,mi,ielprop,nprop,nprop_,prop,
+     &         nelcon,ier)
         endif
 !     
       elseif(textpart(1)(1:10).eq.'*BOUNDARYF') then

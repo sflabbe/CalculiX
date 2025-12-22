@@ -42,6 +42,21 @@ void elementcpuload(ITG *neapar,ITG *nebpar,ITG *ne,ITG *ipkon,ITG *num_cpus){
 	    nepar++;
 	}
     }
+    if(nepar==0){
+	if(getenv("CCX_DEBUG_ELEMENTCPULOAD")){
+	    ITG imax=*ne<10?*ne:10;
+	    fprintf(stderr,"elementcpuload: no active elements (ne=%d, num_cpus=%d)\n",
+		    *ne,*num_cpus);
+	    for(i=0;i<imax;i++){
+		fprintf(stderr,"  ipkon[%d]=%d\n",i,(int)ipkon[i]);
+	    }
+	}
+	*num_cpus=1;
+	neapar[0]=0;
+	nebpar[0]=-1;
+	SFREE(ipar);
+	return;
+    }
     if(nepar<*num_cpus) *num_cpus=nepar;
 
     /* dividing the element number range into num_cpus equal numbers of 

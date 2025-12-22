@@ -165,6 +165,7 @@
             nprop_=nprop_+8
           enddo
         else
+          nprop_=nprop_+10
           call getnewline(inpc,textpart,istat,n,key,iline,ipol,
      &         inl,ipoinp,inp,ipoinpc)
         endif
@@ -1038,14 +1039,15 @@ c     Bernhardi end
      &             (label.eq.'T3D2    ').or.
      &             (label.eq.'T2D2    ')) then
               mi(1)=max(mi(1),8)
+              mi(2)=max(mi(2),6)
               mi(3)=max(mi(3),2)
               nope=2
-!     modified into C3D8I (11 nodes)
-              nopeexp=13
+              nopeexp=2
             elseif(label.eq.'B31R    ') then
               mi(1)=max(mi(1),1)
+              mi(2)=max(mi(2),6)
               nope=2
-              nopeexp=10
+              nopeexp=2
             elseif((label.eq.'B32     ').or.
      &             (label.eq.'T3D3    ')) then
               mi(1)=max(mi(1),27)

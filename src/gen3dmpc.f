@@ -40,6 +40,12 @@
       real*8 coefmpc(*),xnor(*)
 !     
       do i=1,nmpc
+!
+!     mean rotation MPCs for beams/shells are already defined on
+!     expanded nodes; no remapping needed here
+!
+        if((labmpc(i)(1:7).eq.'MEANROT').and.
+     &     (labmpc(i)(8:9).eq.'BS')) cycle
         index1=ipompc(i)
         dependent=.true.
         loop: do
@@ -54,7 +60,7 @@
               if((labmpc(i)(1:8).eq.'STRAIGHT').or.
      &             (labmpc(i)(1:5).eq.'PLANE').or.
      &             (labmpc(i)(1:4).eq.'BEAM').or.
-     &             (labmpc(i)(1:8).eq.'MEANROT ').or.
+     &             (labmpc(i)(1:7).eq.'MEANROT').or.
      &             (labmpc(i)(1:6).eq.'CYCLIC')) then
                 write(*,*) '*ERROR in gen3dmpc: nodes belonging to'
                 write(*,*) '       1D/2D elements must not be'
@@ -123,7 +129,7 @@
                 if((labmpc(i)(1:8).eq.'STRAIGHT').or.
      &               (labmpc(i)(1:5).eq.'PLANE').or.
      &               (labmpc(i)(1:4).eq.'BEAM').or.
-     &               (labmpc(i)(1:8).eq.'MEANROT ')) then
+     &               (labmpc(i)(1:7).eq.'MEANROT')) then
                   write(*,*) '*ERROR in gen3dmpc: nodes belonging to'
                   write(*,*) '       1D/2D elements must not be'
                   write(*,*) '       subject to a ',labmpc(i)(1:20),

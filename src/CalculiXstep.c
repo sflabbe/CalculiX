@@ -309,7 +309,7 @@ void CalculiXstep(int argc,char argv[][133],ITG **nelemloadp,double **xloadp,
      * - Improved nonlinear spring force/stiffness calculations
      * - System library linking (ARPACK/OpenBLAS autodetection)
      */
-    printf("You are using an executable made on Mon Dec 22 09:45:52 AM UTC 2025\n");
+    printf("You are using an executable made on Mon Dec 22 06:21:11 PM UTC 2025\n");
     fflush(stdout);
 
     NNEW(ipoinp,ITG,2*nentries);

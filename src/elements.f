@@ -26,7 +26,7 @@
 !     
       implicit none
 !     
-      logical solid,beamshell,out3d,dload
+      logical solid,beamshell,out3d,dload,u1beam
 !     
       character*1 inpc(*)
       character*8 lakon(*),label
@@ -49,6 +49,7 @@
       four=4
       iparent=0
       dload=.false.
+      u1beam=.false.
 !     
       label='        '
 !     
@@ -143,6 +144,13 @@
           label='B31     '
         elseif(label(1:4).eq.'T2D2') then
           label='T3D2    '
+        endif
+!
+!     map B31/B31R to the U1 beam formulation
+!
+        if((label.eq.'B31     ').or.(label.eq.'B31R    ')) then
+          label='U1      '
+          u1beam=.true.
         endif
 !     
 !     full integration quadratic hexahedral element
@@ -281,7 +289,7 @@ c     Bernhardi end
      &       (label(1:2).eq.'S4').or.
      &       (label(1:2).eq.'S6').or.
      &       (label(1:2).eq.'S8').or.
-     &       (label(1:1).eq.'B')) then
+     &       (label(1:1).eq.'B').or.u1beam) then
         beamshell=.true.
       endif
 !     
@@ -328,7 +336,15 @@ c     Bernhardi end
 !     (only applicable to 1D and 2D elements such as beams, shells..)
 !     
 c     Bernhardi start
-      if(label(1:5).eq.'C3D8I') then
+      if(u1beam) then
+        nope=2
+        nopeexp=2
+        intpoints=2
+        ndof=6
+        write(label(6:6),'(a1)') char(intpoints)
+        write(label(7:7),'(a1)') char(ndof)
+        write(label(8:8),'(a1)') char(nope)
+      elseif(label(1:5).eq.'C3D8I') then
         nope=8
         nopeexp=11
       elseif(label(4:5).eq.'20') then

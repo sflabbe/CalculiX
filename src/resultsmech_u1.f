@@ -237,7 +237,12 @@
      &     xstateini(nstate_,mi(1),*),tm(3,3),a,reltime,ttime,
      &     thicke(mi(3),*),emeini(6,mi(1),*),aly,alz,bey,bez,xi(2),
      &     vlp(6,2),xi11,xi12,xi22,xk,offset1,offset2,e1(3),e2(3),e3(3),
-     &     t0g(2,*),t1g(2,*)
+     &     t0g(2,*),t1g(2,*),kg(12,12),kgp(4,4),ul(12),sloc(12,12),
+     &     floc(12),pcomp,kgfac,y1,y2,y3,z1,z2,z3
+!
+      integer idy(4),idz(4)
+      data idy /2,6,8,12/
+      data idz /3,5,9,11/
 !     
       kal=reshape((/1,1,2,2,3,3,1,2,1,3,2,3/),(/2,6/))
 !     
@@ -313,7 +318,7 @@ c      write(*,*) 'u1 element ',i
           vl(j,k)=v(j,konl(k))
         enddo
       enddo
-!     
+!
 !     q contains the nodal forces per element; initialization of q
 !     
       if((iperturb(1).ge.2).or.((iperturb(1).le.0).and.(iout.lt.1))) 
@@ -420,6 +425,137 @@ c      write(*,*) 'u1 element ',i
      &         +tm(j,3)*v(6,node)
         enddo
       enddo
+!
+!     internal force from local stiffness (material + geometric)
+!
+      if(calcul_fn.eq.1) then
+         ul(1)=vl(1,1)
+         ul(2)=vl(2,1)
+         ul(3)=vl(3,1)
+         ul(4)=vl(4,1)
+         ul(5)=vl(5,1)
+         ul(6)=vl(6,1)
+         ul(7)=vl(1,2)
+         ul(8)=vl(2,2)
+         ul(9)=vl(3,2)
+         ul(10)=vl(4,2)
+         ul(11)=vl(5,2)
+         ul(12)=vl(6,2)
+!
+         do j=1,12
+            do k=1,12
+               sloc(j,k)=0.d0
+            enddo
+         enddo
+!
+         y1=xk*um*a*e*xi11*(12.d0*e*xi11+xk*um*a*dl*dl)
+         y2=(12.d0*e*xi11-xk*um*a*dl*dl)**2
+         y3=4.d0*e*xi11*((xk*um*a)**2*dl**4+
+     &        3.d0*xk*um*a*dl*dl*e*xi11+
+     &        36.d0*(e*xi11)**2)
+         z1=xk*um*a*e*xi22*(12.d0*e*xi22+xk*um*a*dl*dl)
+         z2=(12.d0*e*xi22-xk*um*a*dl*dl)**2
+         z3=4.d0*e*xi22*((xk*um*a)**2*dl**4+
+     &        3.d0*xk*um*a*dl*dl*e*xi22+
+     &        36.d0*(e*xi22)**2)
+!
+         sloc(1,1)=e*a/dl
+         sloc(1,7)=-sloc(1,1)
+         sloc(2,2)=12.d0*y1/(dl*y2)
+         sloc(2,6)=6.d0*y1/y2
+         sloc(2,8)=-sloc(2,2)
+         sloc(2,12)=sloc(2,6)
+         sloc(3,3)=12.d0*z1/(dl*z2)
+         sloc(3,5)=-6.d0*z1/z2
+         sloc(3,9)=-sloc(3,3)
+         sloc(3,11)=sloc(3,5)
+         sloc(4,4)=um*(xi11+xi22)/dl
+         sloc(4,10)=-sloc(4,4)
+         sloc(5,5)=z3/(dl*z2)
+         sloc(5,9)=6.d0*z1/z2
+         sloc(5,11)=-2.d0*e*xi22*(72.d0*(e*xi22)**2-
+     &        (xk*um*a)**2*dl**4-
+     &        30.d0*xk*um*a*dl*dl*e*xi22)/(dl*z2)
+         sloc(6,6)=y3/(dl*y2)
+         sloc(6,8)=-6.d0*y1/y2
+         sloc(6,12)=-2.d0*e*xi11*(-(xk*um*a)**2*dl**4-
+     &        30.d0*xk*um*a*dl*dl*e*xi11+
+     &        72.d0*(e*xi11)**2)/(dl*y2)
+         sloc(1,7)=-sloc(1,1)
+         sloc(7,7)=sloc(1,1)
+         sloc(8,8)=12.d0*y1/(dl*y2)
+         sloc(8,12)=-6.d0*y1/y2
+         sloc(9,9)=12.d0*z1/(dl*z2)
+         sloc(9,11)=6.d0*z1/z2
+         sloc(10,10)=sloc(4,4)
+         sloc(11,11)=z3/(dl*z2)
+         sloc(12,12)=y3/(dl*y2)
+!
+         if((iperturb(1).eq.1).or.(iperturb(2).eq.1)) then
+            pcomp=0.5d0*(stiini(1,1,i)+stiini(1,2,i))
+            if(dabs(pcomp).gt.0.d0) then
+               do j=1,12
+                  do k=1,12
+                     kg(j,k)=0.d0
+                  enddo
+               enddo
+               kgfac=pcomp/(30.d0*dl)
+               kgp(1,1)=36.d0*kgfac
+               kgp(1,2)=3.d0*dl*kgfac
+               kgp(1,3)=-36.d0*kgfac
+               kgp(1,4)=3.d0*dl*kgfac
+               kgp(2,1)=kgp(1,2)
+               kgp(2,2)=4.d0*dl*dl*kgfac
+               kgp(2,3)=-3.d0*dl*kgfac
+               kgp(2,4)=-dl*dl*kgfac
+               kgp(3,1)=kgp(1,3)
+               kgp(3,2)=kgp(2,3)
+               kgp(3,3)=36.d0*kgfac
+               kgp(3,4)=-3.d0*dl*kgfac
+               kgp(4,1)=kgp(1,4)
+               kgp(4,2)=kgp(2,4)
+               kgp(4,3)=kgp(3,4)
+               kgp(4,4)=4.d0*dl*dl*kgfac
+!
+               do j=1,4
+                  do k=1,4
+                     sloc(idy(j),idy(k))=
+     &                    sloc(idy(j),idy(k))+kgp(j,k)
+                     sloc(idz(j),idz(k))=
+     &                    sloc(idz(j),idz(k))+kgp(j,k)
+                  enddo
+               enddo
+            endif
+         endif
+!
+         do j=1,12
+            do k=1,j
+               sloc(j,k)=sloc(k,j)
+            enddo
+         enddo
+!
+         do j=1,12
+            floc(j)=0.d0
+            do k=1,12
+               floc(j)=floc(j)+sloc(j,k)*ul(k)
+            enddo
+         enddo
+!
+         node=kon(indexe+1)
+         do j=1,3
+            fn(j,node)=fn(j,node)+tm(1,j)*floc(1)
+     &           +tm(2,j)*floc(2)+tm(3,j)*floc(3)
+            fn(j+3,node)=fn(j+3,node)+tm(1,j)*floc(4)
+     &           +tm(2,j)*floc(5)+tm(3,j)*floc(6)
+         enddo
+         node=kon(indexe+2)
+         do j=1,3
+            fn(j,node)=fn(j,node)+tm(1,j)*floc(7)
+     &           +tm(2,j)*floc(8)+tm(3,j)*floc(9)
+            fn(j+3,node)=fn(j+3,node)+tm(1,j)*floc(10)
+     &           +tm(2,j)*floc(11)+tm(3,j)*floc(12)
+         enddo
+      endif
 !     
       xi(1)=0.d0
       xi(2)=1.d0
@@ -623,21 +759,7 @@ c        enddo
 !     calculation of the global nodal forces
 !     
         if(calcul_fn.eq.1)then
-          node=kon(indexe+jj)
-          do j=1,3
-            fn(j,node)=fn(j,node)+tm(1,j)*stre(1)
-     &           +tm(2,j)*stre(4)
-     &           +tm(3,j)*stre(5)
-            fn(j+3,node)=fn(j+3,node)+tm(1,j)*stre(6)
-     &           +tm(2,j)*stre(2)
-     &           +tm(3,j)*stre(3)
-c            fn(j,node)=fn(j,node)+tm(1,j)*stre(1)
-c     &           +tm(2,j)*stre(2)
-c     &           +tm(3,j)*stre(3)
-c            fn(j+3,node)=fn(j+3,node)+tm(1,j)*stre(4)
-c     &           +tm(2,j)*stre(5)
-c     &           +tm(3,j)*stre(6)
-          enddo
+!         internal nodal forces already assembled from sloc*ul
         endif
       enddo
 !
