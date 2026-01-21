@@ -1,0 +1,40 @@
+name: repo path sanity
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: fail on Windows invalid characters
+        run: |
+          bad=$(git ls-files | grep -E '[:<>\"|?*]' || true)
+          if [ -n "$bad" ]; then
+            echo "Invalid paths for Windows detected:"
+            echo "$bad"
+            exit 1
+          fi
+
+      - name: fail on case-insensitive collisions
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          from collections import defaultdict
+          paths = subprocess.check_output(["git","ls-files"], text=True).splitlines()
+          g = defaultdict(list)
+          for p in paths:
+            g[p.lower()].append(p)
+          hits = [v for v in g.values() if len(v) > 1]
+          if hits:
+            print("Case-insensitive collisions detected:")
+            for v in hits:
+              print("collision")
+              for p in v:
+                print(" ", p)
+            raise SystemExit(1)
+          print("No case collisions.")
+          PY
